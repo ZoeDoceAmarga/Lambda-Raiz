@@ -1163,7 +1163,66 @@ const cancelaCotacao: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async 
 exports.cancelaCotacao = middyfy(cancelaCotacao);
 
 const gravaNaturezaOrcamentaria: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (event) => {
+    try{
+        const campos = event.body;
+        let CODCOLIGADA= 0;
+        let CODTBORCAMENTO=campos.codigoNaturezaOrc 
+        let DESCRICAO=campos.descricaoNaturezaOrc
+        let CAMPOLIVRE=campos.campoLivreNaturezaOrc
+        let INATIVO =campos.campoInativo as string
+        let SINTETICOANALITICO=campos.sinteticoAnalitico
+        let NAOPERMITETRANSF=campos.naoPermiteTransferirValores
+        
+            var soapEnvelope =
+                {
+                "id": "-1",
+                "CODCOLIGADA": CODCOLIGADA,
+                "CODTBORCAMENTO": CODTBORCAMENTO,
+                "DESCRICAO": DESCRICAO,
+                "CAMPOLIVRE": CAMPOLIVRE,
+                "INATIVO":parseInt(INATIVO),
+                "NATUREZA": 1 ,
+                "SINTETICOANALITICO": SINTETICOANALITICO,
+                "NAOPERMITETRANSF":NAOPERMITETRANSF
+                }
+
+
+        let response = await axios.post(
+            `${ConfigManagerRm.getUrl()}:8051/RMSRestDataServer/rest/MovTbOrcamentoData `,
+            soapEnvelope,
+            {
+                headers: {
+                    'Authorization': `Basic ${ConfigManagerRm.getCredentials()}`,
+                    'Content-Type': 'text/json;charset=UTF-8',
+                }
+            }
+        );
+        
+        retorno.body = JSON.stringify(response.data);
+        let result = response.data
+        // retorno.body=result 
+
+        if (result.length != '1') {
+            let error = result.messages[0].detail;
+            retorno.body = JSON.stringify({ message: 'Internal Server Error', error: error });
+            retorno.statusCode = 500;
+            return retorno
+        } else {
+            let resposta = 'SUCESSO'
+            retorno.body = JSON.stringify({ resposta });
+            retorno.statusCode = 200
+            return retorno
+        }
+
     
-    return retorno
+
+    }
+    catch(error){
+        retorno.body = JSON.stringify({ message: 'Internal Server Error', error: error.message || error.toString() });
+        retorno.statusCode = 500;
+        return retorno
+
+    }
+    
 }
 exports.gravaNaturezaOrcamentaria = middyfy(gravaNaturezaOrcamentaria);
